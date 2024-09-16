@@ -3,12 +3,12 @@
 namespace App\Http\Resources;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class UserResource
 {
-    public static function toArray(Model | Collection $data): array
+    public static function toArray(Model | Collection $data): array | Collection
     {
         if ($data instanceof User) {
             return self::doArray($data);
@@ -20,13 +20,15 @@ class UserResource
     {
         return [
             'id' => $user->getAttribute('id'),
-            'first_name' => $user->getAttribute('first_name'),
-            'last_name' => $user->getAttribute('last_name'),
-            'user_type' => $user->getAttribute('user_type'),
+            'firstName' => $user->getAttribute('first_name'),
+            'lastName' => $user->getAttribute('last_name'),
+            'initials' => $user->getAttribute('initials'),
+            'role' => $user->getAttribute('role'),
+            'gender' => $user->getAttribute('gender'),
             'email' => $user->getAttribute('email'),
-            'phone_number' => $user->getAttribute('phone_number'),
-            'created_at' => $user->getAttribute('created_at'),
-            'updated_at' => $user->getAttribute('updated_at')
+            'phoneNumber' => $user->getAttribute('phone_number'),
+            'idNumber' => $user->getAttribute('id_number'),
+            'createdAt' => $user->getAttribute('created_at')->format('M d, Y')
         ];
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Traits\TracksActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as CanBeAuthenticated;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -11,10 +13,11 @@ use Laravel\Sanctum\NewAccessToken;
 
 class User extends CanBeAuthenticated
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, TracksActivity;
 
     protected $fillable = [
-        'user_type',
+        'role',
+        'gender',
         'first_name',
         'last_name',
         'phone_number',
@@ -22,6 +25,8 @@ class User extends CanBeAuthenticated
         'email',
         'password'
     ];
+
+    protected $appends = ['initials'];
 
     protected $hidden = [
         'password',
@@ -34,6 +39,15 @@ class User extends CanBeAuthenticated
         ];
     }
 
+    public function getInitialsAttribute(): string
+    {
+        return sprintf(
+            "%s%s",
+            $this->getAttribute('first_name')[0],
+            $this->getAttribute('last_name')[0]
+        );
+    }
+
     public function createToken(): NewAccessToken
     {
         $token = $this->tokens()->create([
@@ -43,5 +57,10 @@ class User extends CanBeAuthenticated
         ]);
 
         return new NewAccessToken($token, $plainTextToken);
+    }
+
+    public function properties(): HasMany
+    {
+        return $this->hasMany(Property::class, 'owner_id');
     }
 }

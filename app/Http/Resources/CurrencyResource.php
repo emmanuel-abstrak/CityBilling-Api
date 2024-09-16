@@ -22,9 +22,9 @@ class CurrencyResource
             'id' => $currency->getAttribute('id'),
             'code' => $currency->getAttribute('code'),
             'symbol' => $currency->getAttribute('symbol'),
-            'exchange_rate' => $currency->getAttribute('exchange_rate'),
-            'created_at' => $currency->getAttribute('created_at'),
-            'updated_at' => $currency->getAttribute('updated_at')
+            'exchangeRate' => $currency->getAttribute('exchange_rate'),
+            'createdAt' => $currency->getAttribute('created_at')->format('M d, Y'),
+            'updatedAt' => $currency->getAttribute('updated_at')->format('M d, Y')
         ];
     }
 }

@@ -13,6 +13,9 @@ return [
     | "mailers" array. Examples of each type of mailer are provided.
     |
     */
+    'paths' => [
+        resource_path('views/mail'),
+    ],
 
     'default' => env('MAIL_MAILER', 'log'),
 

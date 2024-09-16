@@ -32,6 +32,11 @@ class ActionResponse
         return self::output(false, $response, ResponseAlias::HTTP_UNAUTHORIZED);
     }
 
+    public static function accessDenied(mixed $response): JsonResponse
+    {
+        return self::output(false, $response, ResponseAlias::HTTP_FORBIDDEN);
+    }
+
     public static function notFound(mixed $response): JsonResponse
     {
         return self::output(false, $response, ResponseAlias::HTTP_NOT_FOUND);
