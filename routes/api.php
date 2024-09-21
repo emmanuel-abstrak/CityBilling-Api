@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['guest']], function () {
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('forgot', [AuthController::class, 'forgot']);
+    Route::post('reset-password', [AuthController::class, 'resetPassword']);
 });
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::match(['get', 'post'],'logout', [AuthController::class, 'logout']);
@@ -26,7 +28,10 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('activities', [DashboardController::class, 'activities']);
     });
 
-    Route::get('user', [ProfileController::class, 'user']);
+    Route::group(['prefix' => 'user'], function() {
+        Route::get('', [ProfileController::class, 'user']);
+        Route::post('change-password', [ProfileController::class, 'changePassword']);
+    });
 
     Route::resource('portal-users', PortalUserController::class);
     Route::resource('activity-log', ActivityLogController::class);

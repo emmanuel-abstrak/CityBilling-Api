@@ -22,14 +22,16 @@ class TariffGroupResource
             'id' => $tariff->getAttribute('id'),
             'minSize' => $tariff->getAttribute('min_size'),
             'maxSize' => $tariff->getAttribute('max_size'),
-            'residentialRatesCharge' => $tariff->getAttribute('residential_rates_charge'),
-            'residentialRefuseCharge' => $tariff->getAttribute('residential_refuse_charge'),
-            'residentialSewerageCharge' => $tariff->getAttribute('residential_sewerage_charge'),
-            'commercialRatesCharge' => $tariff->getAttribute('commercial_rates_charge'),
-            'commercialRefuseCharge' => $tariff->getAttribute('commercial_refuse_charge'),
-            'commercialSewerageCharge' => $tariff->getAttribute('commercial_sewerage_charge'),
             'createdAt' => $tariff->getAttribute('created_at')->format('M d, Y'),
             'updatedAt' => $tariff->getAttribute('updated_at')->format('M d, Y'),
+            'tariffs' => $tariff->getAttribute('tariffs')->map(function($charge) {
+                return [
+                    'id' => $charge->getAttribute('id'),
+                    'propertyType' => $charge->getAttribute('propertyType')->getAttribute('name'),
+                    'service' => $charge->getAttribute('service')->getAttribute('name'),
+                    'price' => money_currency($charge->getAttribute('price')),
+                ];
+            }),
             'suburb' => [
                 'id' => $tariff->getAttribute('suburb')->getAttribute('id'),
                 'name' => $tariff->getAttribute('suburb')->getAttribute('name'),

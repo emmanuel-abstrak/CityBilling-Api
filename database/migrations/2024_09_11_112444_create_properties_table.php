@@ -16,11 +16,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('owner_id')->nullable()->references('id')->on('users')->nullOnDelete();
             $table->foreignId('suburb_id')->nullable()->references('id')->on('suburbs')->nullOnDelete();
+            $table->foreignId('type_id')->nullable()->references('id')->on('property_types')->nullOnDelete();
             $table->foreignId('tariff_group_id')->nullable()->references('id')->on('tariff_groups')->nullOnDelete();
             $table->decimal('size');
             $table->string('meter')->index()->unique();
             $table->enum('meter_provider', MeterProvider::values())->index();
-            $table->enum('type', PropertyType::values())->index();
             $table->string('address');
             $table->timestamps();
         });

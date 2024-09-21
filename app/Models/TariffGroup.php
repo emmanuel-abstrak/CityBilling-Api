@@ -6,6 +6,7 @@ use App\Traits\TracksActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TariffGroup extends Model
 {
@@ -14,17 +15,16 @@ class TariffGroup extends Model
     protected $fillable = [
         'suburb_id',
         'min_size',
-        'max_size',
-        'residential_rates_charge',
-        'residential_refuse_charge',
-        'residential_sewerage_charge',
-        'commercial_rates_charge',
-        'commercial_refuse_charge',
-        'commercial_sewerage_charge'
+        'max_size'
     ];
 
     public function suburb(): BelongsTo
     {
         return $this->belongsTo(Suburb::class, 'suburb_id');
+    }
+
+    public function tariffs(): HasMany
+    {
+        return $this->hasMany(TariffGroupCharge::class, 'tariff_group_id');
     }
 }

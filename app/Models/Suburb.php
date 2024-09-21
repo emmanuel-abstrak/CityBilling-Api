@@ -19,4 +19,9 @@ class Suburb extends Model
     {
         return $this->hasMany(TariffGroup::class, 'suburb_id');
     }
+
+    public function properties(): HasMany
+    {
+        return $this->hasMany(Property::class, 'suburb_id');
+    }
 }

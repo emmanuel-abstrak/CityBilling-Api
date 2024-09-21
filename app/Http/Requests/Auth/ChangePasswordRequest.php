@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\TariffGroups;
+namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class TariffGroupCreateRequest extends FormRequest
+class ChangePasswordRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,10 +14,8 @@ class TariffGroupCreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'suburb_id' => ['required', 'integer', 'exists:suburbs,id'],
-            'min_size' => ['required'],
-            'max_size' => ['required'],
-            'tariffs' => ['required'],
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|max:20',
         ];
     }
 

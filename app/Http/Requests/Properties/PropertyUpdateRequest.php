@@ -16,7 +16,7 @@ class PropertyUpdateRequest extends FormRequest
     {
         return [
             'suburb_id' => ['required', 'exists:suburbs,id'],
-            'type' => ['required', 'in:'.implode(',', PropertyType::values())],
+            'type_id' => ['required', 'exists:property_types,id'],
             'size' => ['required'],
             'meter' => ['required'],
             'address' => ['required'],

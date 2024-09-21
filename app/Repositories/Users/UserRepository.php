@@ -5,6 +5,7 @@ namespace App\Repositories\Users;
 use App\Models\User;
 use App\Repositories\BaseRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
@@ -23,8 +24,8 @@ class UserRepository extends BaseRepository implements IUserRepository
             });
         }
 
-        if (isset($search['role'])) {
-            $query = User::query()->where('role', $search['role']);
+        if (isset($search['roles'])) {
+            $query = User::query()->whereIn('role', $search['roles']);
         }
 
         return $query->orderBy('id', 'desc')->paginate($this->perPage);
@@ -81,5 +82,14 @@ class UserRepository extends BaseRepository implements IUserRepository
     public function existsExcept(string $email, int $userId): bool
     {
         return User::query()->where('email', $email)->whereNot('id', $userId)->count() > 0;
+    }
+
+    public function changePassword(int $userId, string $password): ?User
+    {
+        $user = $this->getById($userId);
+
+        $user->setAttribute('password', Hash::make($password));
+        $user->save();
+        return $user->refresh();
     }
 }

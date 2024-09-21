@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PropertyStatement extends Model
 {
@@ -12,16 +14,17 @@ class PropertyStatement extends Model
 
     protected $fillable = [
         'property_id',
-        'rates_total',
-        'refuse_total',
-        'sewer_total',
-        'rates_paid',
-        'refuse_paid',
-        'sewer_paid',
+        'total',
+        'paid'
     ];
 
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class, 'property_id');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(PropertyStatementItem::class, 'property_statement_id');
     }
 }

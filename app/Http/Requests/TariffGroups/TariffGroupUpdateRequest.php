@@ -16,12 +16,7 @@ class TariffGroupUpdateRequest extends FormRequest
         return [
             'min_size' => ['required'],
             'max_size' => ['required'],
-            'residential_rates_charge' => ['required'],
-            'residential_refuse_charge' => ['required'],
-            'residential_sewerage_charge' => ['required'],
-            'commercial_rates_charge' => ['required'],
-            'commercial_refuse_charge' => ['required'],
-            'commercial_sewerage_charge' => ['required'],
+            'tariffs' => ['required'],
         ];
     }
 

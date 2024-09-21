@@ -8,9 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('property_statements', function (Blueprint $table) {
+        Schema::create('property_statement_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('property_id')->references('id')->on('properties')->onDelete('cascade');
+            $table->foreignId('property_statement_id')->references('id')->on('property_statements')->onDelete('cascade');
+            $table->foreignId('service_id')->references('id')->on('services')->onDelete('cascade');
             $table->decimal('total', 25)->comment('In USD');
             $table->decimal('paid', 25)->default(0)->comment('In USD');
             $table->timestamps();
@@ -19,6 +20,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('property_statements');
+        Schema::dropIfExists('property_statement_items');
     }
 };

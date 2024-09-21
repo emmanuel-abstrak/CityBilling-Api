@@ -21,6 +21,10 @@ class PropertyTypeResource
         return [
             'id' => $type->getAttribute('id'),
             'name' => $type->getAttribute('name'),
+            'cutoff' => $type->getAttribute('cutoff'),
+            'cutoffPrice' => $type->getAttribute('cutoff_price'),
+            'price' => $type->getAttribute('price'),
+            'properties' => $type->getAttribute('properties')->count(),
             'createdAt' => $type->getAttribute('created_at')->format('M d, Y'),
             'updatedAt' => $type->getAttribute('updated_at')->format('M d, Y')
         ];

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Library\Enums\PropertyType;
 use App\ServiceProviders\Shared\MeterDetail;
 use App\Traits\TracksActivity;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,7 +18,7 @@ class Property extends Model
 
     protected $fillable = [
         'owner_id',
-        'type',
+        'type_id',
         'suburb_id',
         'tariff_group_id',
         'size',
@@ -40,6 +39,11 @@ class Property extends Model
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(PropertyType::class, 'type_id');
+    }
+
     public function suburb(): BelongsTo
     {
         return $this->belongsTo(Suburb::class, 'suburb_id');
@@ -55,59 +59,43 @@ class Property extends Model
         return $this->belongsTo(TariffGroup::class, 'tariff_group_id');
     }
 
-    public function getRatesChargeAttribute(): string | null
-    {
-        return match ($this->getAttribute('type')) {
-            PropertyType::residential->value => money_currency($this->getAttribute('tariffGroup')->getAttribute('residential_rates_charge')),
-            PropertyType::commercial->value => money_currency($this->getAttribute('tariffGroup')->getAttribute('commercial_rates_charge')),
-            default => null
-        };
-    }
-
-    public function getRefuseChargeAttribute(): string | null
-    {
-        return match ($this->getAttribute('type')) {
-            PropertyType::residential->value => money_currency($this->getAttribute('tariffGroup')->getAttribute('residential_refuse_charge')),
-            PropertyType::commercial->value => money_currency($this->getAttribute('tariffGroup')->getAttribute('commercial_refuse_charge')),
-            default => null
-        };
-    }
-
-    public function getSewerChargeAttribute(): string | null
-    {
-        return match ($this->getAttribute('type')) {
-            PropertyType::residential->value => money_currency($this->getAttribute('tariffGroup')->getAttribute('residential_sewerage_charge')),
-            PropertyType::commercial->value => money_currency($this->getAttribute('tariffGroup')->getAttribute('commercial_sewerage_charge')),
-            default => null
-        };
-    }
-
     public function getBalancesAttribute(): array
     {
-        $rates_balance = 0;
-        $refuse_balance = 0;
-        $sewer_balance = 0;
+        $data = [];
+        $this->getAttribute('tariffGroup')->getAttribute('tariffs')
+            ->where('property_type_id', $this->getAttribute('type_id'))->each(function($tariff) use (&$data) {
+                $data[strtolower($tariff->getAttribute('service')->getAttribute('name'))] = [
+                    'name' => strtolower($tariff->getAttribute('service')->getAttribute('name')),
+                    'amount' => money_currency(0)
+                ];
+            });
 
-        $this->getOwingStatements()->each(function ($statement) use(&$rates_balance, &$refuse_balance, &$sewer_balance) {
-            $rates_balance += ($statement->getAttribute('rates_total') - $statement->getAttribute('rates_paid'));
-            $refuse_balance += ($statement->getAttribute('refuse_total') - $statement->getAttribute('refuse_paid'));
-            $sewer_balance += ($statement->getAttribute('sewer_total') - $statement->getAttribute('sewer_paid'));
+        $this->getOwingStatements()->each(function ($statement) use(&$data) {
+            foreach ($statement->items as $statementItem) {
+                $balance = ($statementItem->getAttribute('total') - $statementItem->getAttribute('paid'));
+                $key = strtolower($statementItem->getAttribute('service')->getAttribute('name'));
+                if (!isset($data[$key])) {
+                    $data[$key] = [
+                        'name' => $key,
+                        'amount' => money_currency($balance)
+                    ];
+                } else {
+                    $data[$key] = [
+                        'name' => $key,
+                        'amount' => money_currency($data[$key]['amount'] + $balance)
+                    ];
+                }
+            }
         });
 
-        return [
-            'rates' => money_currency($rates_balance),
-            'refuse' => money_currency($refuse_balance),
-            'sewer' => money_currency($sewer_balance)
-        ];
+        return $data;
     }
 
     private function getOwingStatements(): Collection
     {
         return $this->getAttribute('statements')->filter(function($statement) {
             return (
-                $statement->getAttribute('rates_paid') < $statement->getAttribute('rates_total') ||
-                $statement->getAttribute('refuse_paid') < $statement->getAttribute('refuse_total') ||
-                $statement->getAttribute('sewer_paid') < $statement->getAttribute('sewer_total')
+                $statement->getAttribute('paid') < $statement->getAttribute('total')
             );
         });
     }

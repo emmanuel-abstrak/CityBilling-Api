@@ -21,20 +21,32 @@ class PropertyResource
     {
         return [
             'id' => $property->getAttribute('id'),
-            'type' => $property->getAttribute('type'),
             'size' => $property->getAttribute('size'),
             'meter' => $property->getAttribute('meter'),
             'meter_provider' => $property->getAttribute('meter_provider'),
             'address' => $property->getAttribute('address'),
-            'ratesCharge' => $property->getAttribute('rates_charge'),
-            'refuseCharge' => $property->getAttribute('refuse_charge'),
-            'sewerCharge' => $property->getAttribute('sewer_charge'),
-            'balances' => $property->getAttribute('balances'),
+            'balances' => array_values($property->getAttribute('balances')),
             'owner' => $property->getAttribute('owner') ? UserResource::toArray($property->getAttribute('owner')) : null,
             'suburb' => $property->getAttribute('suburb') ? [
                 'id' => $property->getAttribute('suburb')->getAttribute('id'),
                 'name' => $property->getAttribute('suburb')->getAttribute('name'),
             ] : null,
+            'type' => [
+                'id' => $property->getAttribute('type')->getAttribute('id'),
+                'name' => $property->getAttribute('type')->getAttribute('name'),
+                'createdAt' => $property->getAttribute('created_at')->format('M d, Y'),
+            ],
+            'tariffs' => array_values(
+                    $property->getAttribute('tariffGroup')
+                    ->getAttribute('tariffs')
+                    ->where('property_type_id', $property->getAttribute('type_id'))
+                    ->map(function($charge) {
+                        return [
+                            'name' => $charge->getAttribute('service')->getAttribute('name'),
+                            'price' => $charge->getAttribute('price'),
+                        ];
+                    })->toArray()
+            ),
             'createdAt' => $property->getAttribute('created_at')->format('M d, Y'),
             'updatedAt' => $property->getAttribute('updated_at')->format('M d, Y'),
         ];

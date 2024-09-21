@@ -21,7 +21,7 @@ class SuburbResource
         return [
             'id' => $suburb->getAttribute('id'),
             'name' => $suburb->getAttribute('name'),
-            'properties' => 20,
+            'properties' => $suburb->getAttribute('properties')->count(),
             'createdAt' => $suburb->getAttribute('created_at')->format('M d, Y'),
             'updatedAt' => $suburb->getAttribute('updated_at')->format('M d, Y')
         ];

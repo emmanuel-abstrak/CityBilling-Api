@@ -31,6 +31,10 @@ class PropertyRepository extends BaseRepository implements IPropertyRepository
             $query->where('properties.suburb_id', $search['suburb']);
         }
 
+        if (isset($search['user'])) {
+            $query->where('owner_id', $search['user']);
+        }
+
         return $query->paginate($this->perPage);
     }
 
@@ -90,9 +94,7 @@ class PropertyRepository extends BaseRepository implements IPropertyRepository
                 Carbon::now()->endOfMonth()
             ]
         )->each(function(PropertyStatement $statement) use(&$balance) {
-            $balance += $statement->getAttribute('rates_total') - $statement->getAttribute('rates_paid');
-            $balance += $statement->getAttribute('refuse_total') - $statement->getAttribute('refuse_paid');
-            $balance += $statement->getAttribute('sewer_total') - $statement->getAttribute('sewer_paid');
+            $balance += $statement->getAttribute('total') - $statement->getAttribute('paid');
         });
 
         return $balance;

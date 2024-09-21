@@ -23,13 +23,15 @@ class User extends CanBeAuthenticated
         'phone_number',
         'id_number',
         'email',
-        'password'
+        'password',
+        'password_code',
     ];
 
     protected $appends = ['initials'];
 
     protected $hidden = [
         'password',
+        'password_code',
     ];
 
     protected function casts(): array

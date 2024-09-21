@@ -3,8 +3,11 @@
 namespace App\Repositories\TariffGroups;
 
 use App\Models\TariffGroup;
+use App\Models\TariffGroupCharge;
 use App\Repositories\BaseRepository;
+use Exception;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
@@ -37,10 +40,35 @@ class TariffGroupRepository extends BaseRepository implements ITariffGroupReposi
         if ($this->exists($attributes['min_size'], $attributes['max_size'], $attributes['suburb_id'])) {
             throw ValidationException::withMessages(['code' => 'Tariff already exists']);
         }
-        $tariff = new TariffGroup($attributes);
-        $tariff->save();
+        DB::beginTransaction();
 
-        return $tariff->refresh();
+        try {
+            $tariff = new TariffGroup($attributes);
+            $tariff->save();
+
+            $tariff = $tariff->refresh();
+
+            foreach ($attributes['tariffs'] as $item) {
+
+                $keyArr = explode('_', $item['field']);
+                $typeId = $keyArr[0];
+                $serviceId = $keyArr[1];
+
+                $tariffCharge = new TariffGroupCharge([
+                    'tariff_group_id' => $tariff->getAttribute('id'),
+                    'property_type_id' => $typeId,
+                    'service_id' => $serviceId,
+                    'price' => $item['value'],
+                ]);
+                $tariffCharge->save();
+            }
+
+            DB::commit();
+            return $tariff;
+        } catch (Exception $exception) {
+            DB::rollBack();
+            throw ValidationException::withMessages($attributes['tariffs']);
+        }
     }
 
     /**

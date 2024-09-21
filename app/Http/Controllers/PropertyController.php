@@ -31,7 +31,6 @@ class PropertyController extends Controller
 
     public function index(): JsonResponse
     {
-        Gate::authorize('view', Property::class);
         $properties = $this->propertyRepository->getAll(request()->query());
         $properties->getCollection()->transform(fn ($property) =>  PropertyResource::toArray($property));
 
@@ -79,7 +78,7 @@ class PropertyController extends Controller
                 'size' => $validated['size'],
                 'meter' => $validated['meter'],
                 'meter_provider' => $meterDetail->getProvider(),
-                'type' => $validated['type'],
+                'type_id' => $validated['type_id'],
                 'address' => $validated['address'],
             ]);
 
@@ -118,7 +117,7 @@ class PropertyController extends Controller
                 'tariff_group_id' => $tariffGroup->getAttribute('id'),
                 'size' => $validated['size'],
                 'meter' => $validated['meter'],
-                'type' => $validated['type'],
+                'type_id' => $validated['type_id'],
                 'address' => $validated['address'],
             ];
 

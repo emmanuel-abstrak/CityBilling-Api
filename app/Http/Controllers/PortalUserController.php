@@ -6,6 +6,7 @@ use App\Http\Requests\Users\Portal\PortalUserCreateRequest;
 use App\Http\Requests\Users\Portal\PortalUserUpdateRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Responses\ActionResponse;
+use App\Library\Enums\UserRole;
 use App\Models\User;
 use App\Repositories\Users\IUserRepository;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +22,9 @@ class PortalUserController extends Controller
     public function index(): JsonResponse
     {
         Gate::authorize('view', User::class);
-        $users = $this->userRepository->getAll(request()->query());
+        $search = request()->query();
+        $search['roles'] = UserRole::portal();
+        $users = $this->userRepository->getAll($search);
         $users->getCollection()->transform(fn ($user) =>  UserResource::toArray($user));
 
         return ActionResponse::ok(paginated_response($users));

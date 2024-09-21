@@ -13,12 +13,6 @@ return new class extends Migration
             $table->foreignId('suburb_id')->references('id')->on('suburbs')->onDelete('cascade');
             $table->decimal('min_size');
             $table->decimal('max_size');
-            $table->decimal('residential_rates_charge', 20, 2)->comment('In USD');
-            $table->decimal('residential_refuse_charge', 20, 2)->comment('In USD');
-            $table->decimal('residential_sewerage_charge', 20, 2)->comment('In USD');
-            $table->decimal('commercial_rates_charge', 20, 2)->comment('In USD');
-            $table->decimal('commercial_refuse_charge', 20, 2)->comment('In USD');
-            $table->decimal('commercial_sewerage_charge', 20, 2)->comment('In USD');
             $table->timestamps();
         });
     }

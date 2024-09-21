@@ -17,7 +17,7 @@ class PropertyTypeRepository extends BaseRepository implements IPropertyTypeRepo
             $query->where('name', 'like', '%' . $search['search'] . '%');
         }
 
-        return $query->orderBy('order')->paginate($this->perPage);
+        return $query->paginate($this->perPage);
     }
 
     public function getById(int $id): ?PropertyType
