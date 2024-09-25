@@ -66,7 +66,8 @@ class Property extends Model
             ->where('property_type_id', $this->getAttribute('type_id'))->each(function($tariff) use (&$data) {
                 $data[strtolower($tariff->getAttribute('service')->getAttribute('name'))] = [
                     'name' => strtolower($tariff->getAttribute('service')->getAttribute('name')),
-                    'amount' => money_currency(0)
+                    'amount' => money_currency(0),
+                    'total' => money_currency(0),
                 ];
             });
 
@@ -77,12 +78,14 @@ class Property extends Model
                 if (!isset($data[$key])) {
                     $data[$key] = [
                         'name' => $key,
-                        'amount' => money_currency($balance)
+                        'amount' => money_currency($balance),
+                        'total' => $statementItem->getAttribute('total')
                     ];
                 } else {
                     $data[$key] = [
                         'name' => $key,
-                        'amount' => money_currency($data[$key]['amount'] + $balance)
+                        'amount' => money_currency($data[$key]['amount'] + $balance),
+                        'total' => money_currency($data[$key]['total'] + $statementItem->getAttribute('total'))
                     ];
                 }
             }
