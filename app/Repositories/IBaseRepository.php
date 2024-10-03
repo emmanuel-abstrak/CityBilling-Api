@@ -7,7 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface IBaseRepository
 {
-    public function getAll(array $search = []) : LengthAwarePaginator;
+    public function getAll(array $search = []): LengthAwarePaginator;
     public function getById(int $id) : ?Model;
     public function create(array $attributes) : ?Model;
     public function update(int $id, array $attributes) : ?Model;

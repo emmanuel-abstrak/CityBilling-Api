@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 
 class Property extends Model
 {
@@ -79,13 +80,11 @@ class Property extends Model
                     $data[$key] = [
                         'name' => $key,
                         'amount' => money_currency($balance),
-                        'total' => $statementItem->getAttribute('total')
                     ];
                 } else {
                     $data[$key] = [
                         'name' => $key,
                         'amount' => money_currency($data[$key]['amount'] + $balance),
-                        'total' => money_currency($data[$key]['total'] + $statementItem->getAttribute('total'))
                     ];
                 }
             }
@@ -105,44 +104,41 @@ class Property extends Model
 
     public function getLookupSummary(MeterDetail $meterDetail, string $amount, Currency $currency): array
     {
-        $balances = $this->getAttribute('balances');
+        $balances = 0;
+        foreach ($this->getAttribute('balances') as $balance) {
+            $balances += $balance['amount'];
+        }
 
         $newCurrencyAmount = $amount * $currency->getAttribute('exchange_rate');
 
         $returnData = [
             'amount' => $newCurrencyAmount,
-            'rates' => 0,
-            'refuse' => 0,
-            'sewer' => 0,
+            'balances' => [],
             'vat' => 0,
             'tokenAmount' => 0,
+            'volume' => 0,
             'currency' => $currency->getAttribute('code')
         ];
         $remainingAmount = $newCurrencyAmount;
-        if(array_sum($balances) > 0) {
-
+        if($balances > 0) {
             $this->getOwingStatements()->each(function ($statement) use(&$remainingAmount, &$returnData, $currency) {
-                if ($remainingAmount > 0) {
-                    $ratesBalance = ($statement->getAttribute('rates_total') - $statement->getAttribute('rates_paid')) * $currency->getAttribute('exchange_rate');
-                    if ($ratesBalance > 0) {
-                        $returnData['rates'] += min($ratesBalance, $remainingAmount);
-                        $remainingAmount = max(($remainingAmount - $ratesBalance), 0);
-                    }
-                }
-
-                if ($remainingAmount > 0) {
-                    $ratesBalance = ($statement->getAttribute('refuse_total') - $statement->getAttribute('refuse_paid')) * $currency->getAttribute('exchange_rate');
-                    if ($ratesBalance > 0) {
-                        $returnData['refuse'] += min($ratesBalance, $remainingAmount);
-                        $remainingAmount = max(($remainingAmount - $ratesBalance), 0);
-                    }
-                }
-
-                if ($remainingAmount > 0) {
-                    $ratesBalance = ($statement->getAttribute('sewer_total') - $statement->getAttribute('sewer_paid')) * $currency->getAttribute('exchange_rate');
-                    if ($ratesBalance > 0) {
-                        $returnData['sewer'] += min($ratesBalance, $remainingAmount);
-                        $remainingAmount = max(($remainingAmount - $ratesBalance), 0);
+                foreach ($statement->items as $statementItem) {
+                    $balance = ($statementItem->getAttribute('total') - $statementItem->getAttribute('paid'));
+                    $key = strtolower($statementItem->getAttribute('service')->getAttribute('name'));
+                    if ($remainingAmount > 0) {
+                        $deduction = min($balance, $remainingAmount);
+                        $remainingAmount -= $deduction;
+                        if (!isset($returnData[$key])) {
+                            $returnData['balances'][$key] = [
+                                'name' => $key,
+                                'amount' => $deduction,
+                            ];
+                        } else {
+                            $returnData['balances'][$key] = [
+                                'name' => $key,
+                                'amount' => $returnData['balances'][$key]['amount'] + $deduction,
+                            ];
+                        }
                     }
                 }
             });
@@ -156,12 +152,13 @@ class Property extends Model
 
         $returnData['tokenAmount'] = $remainingAmount;
 
-        $finalData = [];
-        foreach ($returnData as $key => $item) {
-            $finalData[$key] = $key != 'currency' ? money_currency($item) : $item;
+        if ($remainingAmount > 0) {
+            $returnData['volume'] = $remainingAmount / $meterDetail->getPrice();
         }
 
-        return $finalData;
+        $returnData['balances'] = array_values($returnData['balances']);
+
+        return $returnData;
     }
 
     public function getVendingSummary(MeterDetail $meterDetail, string $amount, Currency $currency): array
