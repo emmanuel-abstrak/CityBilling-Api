@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\VendingHelper;
 use App\Http\Requests\Vending\MeterLookupRequest;
 use App\Http\Responses\ActionResponse;
 use App\Models\Currency;
@@ -27,11 +28,8 @@ class VendingController extends Controller
 
         /** @var Currency $currency */
         $currency = $this->currencyRepository->getByCode($validated['currency']);
-        $property = $meterDetail->getProperty();
 
-        $summary = $property->getLookupSummary($meterDetail, $validated['amount'], $currency);
-
-        $summary['meter'] = $meterDetail->toArray();
+        $summary = VendingHelper::getLookupSummary($meterDetail, $currency, $validated['amount']);
 
         return ActionResponse::ok($summary);
     }
