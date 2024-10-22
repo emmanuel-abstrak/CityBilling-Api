@@ -17,7 +17,7 @@ class PropertyStatementItem extends Model
         'paid'
     ];
 
-    public function propertyStatement(): BelongsTo
+    public function statement(): BelongsTo
     {
         return $this->belongsTo(PropertyStatement::class, 'property_statement_id');
     }

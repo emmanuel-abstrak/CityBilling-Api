@@ -18,6 +18,8 @@ use App\Repositories\TariffGroups\ITariffGroupRepository;
 use App\Repositories\TariffGroups\TariffGroupRepository;
 use App\Repositories\Users\IUserRepository;
 use App\Repositories\Users\UserRepository;
+use App\Repositories\WaterPurchases\IWaterPurchaseRepository;
+use App\Repositories\WaterPurchases\WaterPurchaseRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppRepositoryProvider extends ServiceProvider
@@ -32,6 +34,7 @@ class AppRepositoryProvider extends ServiceProvider
         $this->app->bind(IPropertyRepository::class, PropertyRepository::class);
         $this->app->bind(IServiceRepository::class, ServiceRepository::class);
         $this->app->bind(IPropertyTypeRepository::class, PropertyTypeRepository::class);
+        $this->app->bind(IWaterPurchaseRepository::class, WaterPurchaseRepository::class);
     }
 
     public function boot(): void

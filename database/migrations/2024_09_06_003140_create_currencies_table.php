@@ -12,7 +12,9 @@ return new class extends Migration
             $table->id();
             $table->string('code');
             $table->string('symbol');
-            $table->decimal('exchange_rate')->default(1);
+            $table->decimal('exchange_rate', 20)->default(1);
+            $table->decimal('min_buy', 20)->nullable();
+            $table->decimal('max_buy', 20)->nullable();
             $table->timestamps();
         });
     }

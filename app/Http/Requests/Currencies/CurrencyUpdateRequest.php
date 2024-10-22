@@ -16,7 +16,9 @@ class CurrencyUpdateRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'max:5'],
             'symbol' => ['required', 'string', 'max:5'],
-            'exchange_rate' => ['required']
+            'exchange_rate' => ['required'],
+            'min_buy' => ['required'],
+            'max_buy' => ['required'],
         ];
     }
 

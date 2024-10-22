@@ -7,50 +7,88 @@ use App\Http\Requests\Vending\MeterLookupRequest;
 use App\Http\Responses\ActionResponse;
 use App\Models\Currency;
 use App\Repositories\Currencies\ICurrencyRepository;
+use App\Repositories\WaterPurchases\IWaterPurchaseRepository;
 use App\ServiceProviders\Shared\IServiceProvider;
+use Exception;
 use Illuminate\Http\JsonResponse;
+use App\Helpers\PaynowHelper;
+use App\Models\WaterPurchase;
+use Illuminate\Contracts\View\View;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 
 class VendingController extends Controller
 {
     public function __construct(
         private readonly IServiceProvider $serviceProvider,
         private readonly ICurrencyRepository $currencyRepository,
-    ){}
+        private readonly IWaterPurchaseRepository $waterPurchaseRepository,
+    ) {}
 
     public function meterLookup(MeterLookupRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-
-        $meterDetail = $this->serviceProvider->lookUp($validated['meter']);
-        if (!$meterDetail) {
-            return ActionResponse::notFound("Meter not found");
-        }
-
-        /** @var Currency $currency */
-        $currency = $this->currencyRepository->getByCode($validated['currency']);
-
-        $summary = VendingHelper::getLookupSummary($meterDetail, $currency, $validated['amount']);
-
+        $request->validated();
+        $summary = $this->doLookup();
         return ActionResponse::ok($summary);
     }
 
     public function buy(MeterLookupRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $request->validated();
+        $summary = $this->doLookup();
 
-        $meterDetail = $this->serviceProvider->lookUp($validated['meter']);
+        $tariffs = $summary['balances'];
+
+        $purchase = $this->waterPurchaseRepository->create([
+            'property_id' => $summary['property_id'],
+            'currency_id' => $summary['currency_id'],
+            'requested_amount' => request('amount'),
+            'price' => $summary['meter']['price'],
+            'token_amount' => $summary['tokenAmount'],
+            'volume' => $summary['volume'],
+            'vat' => $summary['vat'],
+            'tariffs' => json_encode($tariffs),
+        ]);
+
+        $paynow = (new PaynowHelper($purchase))->getInstance();
+        $ref = sprintf("%s_%s", $purchase->id, request('meter'));
+        $payment = $paynow->createPayment($ref, auth()->check() ? auth()->user()->email : null);
+        $payment->add('Water', $summary['amount']);
+
+        $response = $paynow->send($payment);
+        $purchase->setAttribute('redirect_url', $response->redirectUrl());
+        $purchase->setAttribute('poll_url', $response->pollUrl());
+        $purchase->save();
+
+        $summary['redirect_url'] = $response->redirectUrl();
+        return ActionResponse::ok($summary);
+    }
+
+    public function callback(int $purchaseId): View
+    {
+        $purchase = $this->waterPurchaseRepository->getById($purchaseId);
+        if (!$purchase) {
+            abort(404);
+        }
+
+        if ($purchase->status == WaterPurchase::STATUS_PENDING) {
+            $paynow = new PaynowHelper($purchase);
+            $paynow->settlePayment();
+            $purchase->refresh();
+        }
+
+        return view('vending.callback', compact('purchase'));
+    }
+
+    private function doLookup(): array
+    {
+        $meterDetail = $this->serviceProvider->lookUp(request('meter'));
         if (!$meterDetail) {
-            return ActionResponse::notFound("Meter not found");
+            throw new BadRequestException('Failed to get meter');
         }
 
         /** @var Currency $currency */
-        $currency = $this->currencyRepository->getByCode($validated['currency']);
-        $property = $meterDetail->getProperty();
+        $currency = $this->currencyRepository->getByCode(request('currency'));
 
-        $summary = $property->getLookupSummary($meterDetail, $validated['amount'], $currency);
-
-        $summary['meter'] = $meterDetail->toArray();
-
-        return ActionResponse::ok($summary);
+        return VendingHelper::getLookupSummary($meterDetail, $currency, request('amount'));
     }
 }

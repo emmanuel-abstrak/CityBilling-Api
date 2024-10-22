@@ -15,17 +15,25 @@ class WaterPurchase extends Model
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCELLED = 'cancelled';
     const STATUS_FAILED = 'failed';
+    const STATUS_ABANDONED = 'abandoned';
 
     protected $fillable = [
         'property_id',
         'currency_id',
         'status',
         'requested_amount',
-        'gateway_amount',
+        'token_amount',
+        'price',
+        'vat',
+        'tariffs',
         'payment_method',
         'volume',
         'token',
+        'redirect_url',
+        'poll_url',
     ];
+
+    protected $appends = ['formatted_tariffs'];
 
     public function property(): BelongsTo
     {
@@ -37,4 +45,8 @@ class WaterPurchase extends Model
         return $this->belongsTo(Currency::class, 'currency_id');
     }
 
+    public function getFormattedTariffsAttribute(): array
+    {
+        return json_decode($this->getAttribute('tariffs'), true);
+    }
 }

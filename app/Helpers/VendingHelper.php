@@ -4,7 +4,10 @@ namespace App\Helpers;
 
 use App\Models\Currency;
 use App\Models\Property;
+use App\ServiceProviders\Calin;
 use App\ServiceProviders\Shared\MeterDetail;
+use App\Models\WaterPurchase;
+use App\ServiceProviders\Shared\TokenDetail;
 
 readonly class VendingHelper
 {
@@ -12,16 +15,15 @@ readonly class VendingHelper
     {
         $property = $meterDetail->getProperty();
         $meterArray = $meterDetail->toArray();
-        $waterCharge = static::getWaterCharge($property);
-        $meterArray['price'] = $waterCharge * $currency->getAttribute('exchange_rate');
         $meterArray['currency'] = $currency->getAttribute('code');
+        $meterArray['number'] = $property->getAttribute('meter');
 
         $balances = 0;
         foreach ($property->getAttribute('balances') as $balance) {
-            $balances += $balance['amount'];
+            $balances += round($balance['amount'], 2);
         }
 
-        $newCurrencyAmount = $amount * $currency->getAttribute('exchange_rate');
+        $newCurrencyAmount = $amount;
 
         $returnData = [
             'amount' => $newCurrencyAmount,
@@ -30,26 +32,30 @@ readonly class VendingHelper
             'tokenAmount' => 0,
             'volume' => 0,
             'currency' => $currency->getAttribute('code'),
+            'currency_id' => $currency->getAttribute('id'),
+            'property_id' => $property->getAttribute('id'),
             'meter' => $meterArray
         ];
         $remainingAmount = $newCurrencyAmount;
-        if($balances > 0) {
-            $property->getOwingStatements()->each(function ($statement) use(&$remainingAmount, &$returnData) {
+        if ($balances > 0) {
+            $property->getOwingStatements()->each(function ($statement) use (&$remainingAmount, &$returnData, $currency) {
                 foreach ($statement->items as $statementItem) {
                     $balance = ($statementItem->getAttribute('total') - $statementItem->getAttribute('paid'));
                     $key = strtolower($statementItem->getAttribute('service')->getAttribute('name'));
                     if ($remainingAmount > 0) {
-                        $deduction = min($balance, $remainingAmount);
+                        $deduction = CurrencyHelper::convert($currency, min($balance, $remainingAmount));
                         $remainingAmount -= $deduction;
                         if (!isset($returnData[$key])) {
                             $returnData['balances'][$key] = [
+                                'statement_item_id' => $statementItem->getAttribute('id'),
                                 'name' => $key,
-                                'amount' => $deduction,
+                                'amount' => round($deduction, 2),
                             ];
                         } else {
                             $returnData['balances'][$key] = [
+                                'statement_item_id' => $statementItem->getAttribute('id'),
                                 'name' => $key,
-                                'amount' => $returnData['balances'][$key]['amount'] + $deduction,
+                                'amount' => round($returnData['balances'][$key]['amount'] + $deduction, 2),
                             ];
                         }
                     }
@@ -63,28 +69,46 @@ readonly class VendingHelper
             $remainingAmount -= $vat;
         }
 
-        $returnData['tokenAmount'] = $remainingAmount;
+        $returnData['tokenAmount'] = round($remainingAmount, 2);
 
         if ($remainingAmount > 0) {
-            $returnData['volume'] = $remainingAmount / $meterDetail->getPrice();
+            $returnData['volume'] = static::getWaterVolume($remainingAmount, $currency, $property);
         }
 
         $returnData['balances'] = array_values($returnData['balances']);
+        $returnData['vat'] = round($returnData['vat'], 2);
 
         return $returnData;
     }
 
-    public static function getWaterCharge(Property $property)
+    public static function getWaterVolume(float $amount, Currency $currency, Property $property): float
     {
+        $remainingAmount = round(CurrencyHelper::convert($currency, $amount), 2);
         $propertyType = $property->getAttribute('type');
         $currentMonthPurchaseVolume = WaterPurchaseHelper::getCurrentMonthVolume($property);
 
+        $normalCharge = round(CurrencyHelper::convert($currency, $propertyType->price), 2);
+
+        $normalVolume = 0;
+        $discountedVolume = 0;
+
         if ($propertyType->cutoff) {
-            if ($currentMonthPurchaseVolume < $propertyType->cutoff) {
-                return $propertyType->cutoff_price;
-            }
+            $discountedCharge = round(CurrencyHelper::convert($currency, $propertyType->cutoff_price), 2);
+            $remainingDiscountedVolume = max(0, $propertyType->cutoff - $currentMonthPurchaseVolume);
+            $discountedVolume = min($remainingAmount / $discountedCharge, $remainingDiscountedVolume);
+            $remainingAmount -= $discountedVolume * $discountedCharge;
         }
 
-        return $propertyType->price;
+        if ($remainingAmount > 0) {
+            $normalVolume = $remainingAmount / $normalCharge;
+        }
+
+        return $discountedVolume + $normalVolume;
+    }
+
+    public static function buyToken(WaterPurchase $purchase): ?TokenDetail
+    {
+        $calin = new Calin();
+        return $calin->vend($purchase);
     }
 }

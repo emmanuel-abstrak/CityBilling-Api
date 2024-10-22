@@ -4,8 +4,6 @@ namespace Database\Seeders;
 
 use App\Library\Enums\Gender;
 use App\Library\Enums\UserRole;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Repositories\Currencies\CurrencyRepository;
 use App\Repositories\Suburbs\SuburbRepository;
 use App\Repositories\Users\UserRepository;
@@ -21,7 +19,7 @@ class DatabaseSeeder extends Seeder
             'symbol' => '$'
         ]);
         (new CurrencyRepository())->create([
-            'code' => 'ZIG',
+            'code' => 'ZWG',
             'symbol' => 'Z$'
         ]);
 

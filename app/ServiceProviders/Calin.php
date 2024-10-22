@@ -4,6 +4,7 @@ namespace App\ServiceProviders;
 
 use App\Library\Enums\MeterProvider;
 use App\Models\Property;
+use App\Models\WaterPurchase;
 use App\ServiceProviders\Shared\MeterDetail;
 use App\ServiceProviders\Shared\TokenDetail;
 use GuzzleHttp\Client;
@@ -42,17 +43,19 @@ class Calin
         return null;
     }
 
-    public static function vend(Property $property, ?float $amount, ?float $volume): ?TokenDetail
+    public static function vend(WaterPurchase $purchase): ?TokenDetail
     {
         $data = [
-            'meter_number' => $property->getAttribute('meter'),
-            'amount' => $amount,
+            'meter_number' => $purchase->property->getAttribute('meter'),
+            'amount' => $purchase->volume,
             'is_vend_by_unit' => true,
         ];
 
         $res = self::sendRequest($data);
         if (is_array($res) && isset($res['result']) && isset($res['result_code']) && $res['result_code'] == 0) {
-            return new TokenDetail();
+            $token = new TokenDetail();
+            $token->setToken($res['result']['token']);
+            return $token;
         }
 
         return null;
@@ -65,13 +68,13 @@ class Calin
             'user_name' => config('providers.calin.username'),
             'password' => config('providers.calin.password'),
             'password_vend' => config('providers.calin.vendor')
-        ],$data);
+        ], $data);
 
         $headers = [
             'Content-Type' => 'application/json'
         ];
 
-        $request = new Request('POST', config('providers.calin.base_url'). '/POS_Purchase', $headers, json_encode($data));
+        $request = new Request('POST', config('providers.calin.base_url') . '/POS_Purchase', $headers, json_encode($data));
         $result = (new Client())->sendAsync($request)->wait();
         if ($result->getStatusCode() == 200) {
             return json_decode($result->getBody()->getContents(), true);

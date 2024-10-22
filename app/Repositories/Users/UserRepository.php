@@ -50,8 +50,7 @@ class UserRepository extends BaseRepository implements IUserRepository
 
         $user = new User($attributes);
         $user->save();
-        // Send Email
-        return $user->refresh();
+        return $user;
     }
 
     /**

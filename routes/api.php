@@ -19,16 +19,22 @@ Route::group(['middleware' => ['guest']], function () {
     Route::post('forgot', [AuthController::class, 'forgot']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
 });
-Route::group(['middleware' => ['auth:sanctum']], function () {
-    Route::match(['get', 'post'],'logout', [AuthController::class, 'logout']);
 
-    Route::group(['prefix' => 'dashboard'], function() {
+Route::group(['prefix' => 'vending'], function () {
+    Route::post('meter-lookup', [VendingController::class, 'meterLookup']);
+    Route::post('buy', [VendingController::class, 'buy']);
+});
+
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::match(['get', 'post'], 'logout', [AuthController::class, 'logout']);
+
+    Route::group(['prefix' => 'dashboard'], function () {
         Route::get('properties', [DashboardController::class, 'properties']);
         Route::get('balances', [DashboardController::class, 'balances']);
         Route::get('activities', [DashboardController::class, 'activities']);
     });
 
-    Route::group(['prefix' => 'user'], function() {
+    Route::group(['prefix' => 'user'], function () {
         Route::get('', [ProfileController::class, 'user']);
         Route::post('change-password', [ProfileController::class, 'changePassword']);
     });
@@ -42,10 +48,4 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::resource('tariff-groups', TariffGroupController::class);
     Route::resource('properties', PropertyController::class);
     Route::resource('property-types', PropertyTypeController::class);
-
-    Route::group(['prefix' => 'vending'], function () {
-        Route::post('meter-lookup', [VendingController::class, 'meterLookup']);
-        Route::post('buy', [VendingController::class, 'buy']);
-    });
 });
-

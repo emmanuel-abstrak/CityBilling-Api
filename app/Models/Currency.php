@@ -10,5 +10,5 @@ class Currency extends Model
 {
     use HasFactory, TracksActivity;
 
-    protected $fillable = ["code", "symbol", "exchange_rate"];
+    protected $fillable = ["code", "symbol", "exchange_rate", "min_buy", "max_buy"];
 }

@@ -1,0 +1,12 @@
+:root {
+    --bs-success-bg-subtle: rgba(19, 222, 185, 0.1);
+    --bs-success-text-emphasis: #13deb9;
+    --bs-success-border-subtle: #13deb9;
+
+    --bs-danger-rgb: 245, 127, 0;
+    --bs-danger-bg-subtle: rgba(245, 127, 0, 0.1);
+}
+
+td {
+    padding: .5rem .3rem;
+}
