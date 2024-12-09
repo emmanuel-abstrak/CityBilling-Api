@@ -42,8 +42,6 @@ class PaynowHelper
                 if ($tokenDetail) {
                     $this->payTariffs();
                     $this->waterPurchase->token = $tokenDetail->getToken();
-                    Mail::to($this->waterPurchase->property->owner->getAttribute('email'))
-                        ->send(new PurchaseReceiptMail($this->waterPurchase));
                 }
             } elseif (in_array(strtolower($status->status()), ['cancelled', 'frozen', 'failed'])) {
                 $this->waterPurchase->status = WaterPurchase::STATUS_FAILED;

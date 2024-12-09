@@ -58,7 +58,7 @@ class UserRepository extends BaseRepository implements IUserRepository
      */
     public function update($id, array $attributes): ?User
     {
-        if ($this->existsExcept($attributes['email'], $id)) {
+        if (isset($attributes['email']) && $this->existsExcept($attributes['email'], $id)) {
             throw ValidationException::withMessages(['email' => 'Email already taken']);
         }
         $user = $this->getById($id);

@@ -12,9 +12,12 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SuburbController;
 use App\Http\Controllers\TariffGroupController;
 use App\Http\Controllers\VendingController;
+use App\Http\Controllers\WaterPurchaseController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['guest']], function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('verify-register', [AuthController::class, 'verifyRegistration']);
     Route::post('login', [AuthController::class, 'login']);
     Route::post('forgot', [AuthController::class, 'forgot']);
     Route::post('reset-password', [AuthController::class, 'resetPassword']);
@@ -23,6 +26,7 @@ Route::group(['middleware' => ['guest']], function () {
 Route::group(['prefix' => 'vending'], function () {
     Route::post('meter-lookup', [VendingController::class, 'meterLookup']);
     Route::post('buy', [VendingController::class, 'buy']);
+    Route::resource('water-purchases', WaterPurchaseController::class);
 });
 
 Route::group(['middleware' => ['auth:sanctum']], function () {

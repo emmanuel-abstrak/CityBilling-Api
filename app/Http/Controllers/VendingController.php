@@ -51,14 +51,14 @@ class VendingController extends Controller
 
         $paynow = (new PaynowHelper($purchase))->getInstance();
         $ref = sprintf("%s_%s", $purchase->id, request('meter'));
-        $payment = $paynow->createPayment($ref, auth()->check() ? auth()->user()->email : null);
+        $payment = $paynow->createPayment($ref, null);
         $payment->add('Water', $summary['amount']);
 
         $response = $paynow->send($payment);
         $purchase->setAttribute('redirect_url', $response->redirectUrl());
         $purchase->setAttribute('poll_url', $response->pollUrl());
         $purchase->save();
-
+        $summary['purchase_id'] = $purchase->id;
         $summary['redirect_url'] = $response->redirectUrl();
         return ActionResponse::ok($summary);
     }
