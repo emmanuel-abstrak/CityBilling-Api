@@ -38,11 +38,13 @@ class PaynowHelper
             $status = $this->getInstance()->pollTransaction($this->waterPurchase->poll_url);
             if ($status->paid() || strtolower($status->status()) == 'awaiting delivery' || strtolower($status->status()) == 'settled') {
                 $this->waterPurchase->status = WaterPurchase::STATUS_COMPLETED;
-                $tokenDetail = VendingHelper::buyToken($this->waterPurchase);
-                if ($tokenDetail) {
-                    $this->payTariffs();
-                    $this->waterPurchase->token = $tokenDetail->getToken();
+                if ($this->waterPurchase->token_amount > 0) {
+                    $tokenDetail = VendingHelper::buyToken($this->waterPurchase);
+                    if ($tokenDetail) {
+                        $this->waterPurchase->token = $tokenDetail->getToken();
+                    }
                 }
+                $this->payTariffs();
             } elseif (in_array(strtolower($status->status()), ['cancelled', 'frozen', 'failed'])) {
                 $this->waterPurchase->status = WaterPurchase::STATUS_FAILED;
             } elseif (Carbon::now()->diffInHours($this->waterPurchase->created_at) > 1) {
