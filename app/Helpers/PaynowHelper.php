@@ -43,6 +43,8 @@ class PaynowHelper
                     if ($tokenDetail) {
                         $this->waterPurchase->token = $tokenDetail->getToken();
                     }
+                } else {
+                    $this->waterPurchase->token = 'Paid arrears';
                 }
                 $this->payTariffs();
             } elseif (in_array(strtolower($status->status()), ['cancelled', 'frozen', 'failed'])) {
