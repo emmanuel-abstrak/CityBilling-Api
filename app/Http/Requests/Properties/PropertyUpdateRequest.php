@@ -20,6 +20,7 @@ class PropertyUpdateRequest extends FormRequest
             'size' => ['required'],
             'meter' => ['required'],
             'address' => ['required'],
+            'debt' => ['nullable', 'numeric'],
             'email' => ['required', 'email'],
             'first_name' => ['required'],
             'last_name' => ['required'],

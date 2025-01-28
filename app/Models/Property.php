@@ -24,7 +24,8 @@ class Property extends Model
         'size',
         'meter',
         'meter_provider',
-        'address'
+        'address',
+        'debt'
     ];
 
     protected $appends = [
