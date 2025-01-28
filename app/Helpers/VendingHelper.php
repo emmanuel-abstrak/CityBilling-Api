@@ -18,12 +18,13 @@ readonly class VendingHelper
         $meterArray['currency'] = $currency->getAttribute('code');
         $meterArray['number'] = $property->getAttribute('meter');
 
-        $balances = 0;
+        $debt = ($property->debt && $property->debt > 0 && $property->repayment > 0) ? $property->debt - $property->repayment : null;
+        $balances = $debt ?? 0;
         foreach ($property->getAttribute('balances') as $balance) {
             $balances += round($balance['amount'], 2);
         }
 
-        $newCurrencyAmount = $amount;
+        $newCurrencyAmount = $amount - ($debt ?? 0);
 
         $returnData = [
             'amount' => $newCurrencyAmount,
@@ -36,6 +37,11 @@ readonly class VendingHelper
             'property_id' => $property->getAttribute('id'),
             'meter' => $meterArray
         ];
+
+        if ($debt) {
+            $returnData['balances']['debt'] = $debt;
+        }
+
         $remainingAmount = $newCurrencyAmount;
         if ($balances > 0) {
             $property->getOwingStatements()->each(function ($statement) use (&$remainingAmount, &$returnData, $currency) {

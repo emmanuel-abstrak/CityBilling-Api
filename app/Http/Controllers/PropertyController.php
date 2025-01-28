@@ -81,6 +81,7 @@ class PropertyController extends Controller
                 'type_id' => $validated['type_id'],
                 'address' => $validated['address'],
                 'debt' => $validated['debt'] ?? 0,
+                'repayment' => $validated['repayment'] ?? 0,
             ]);
 
             DB::commit();
@@ -121,6 +122,7 @@ class PropertyController extends Controller
                 'type_id' => $validated['type_id'],
                 'address' => $validated['address'],
                 'debt' => $validated['debt'] ?? 0,
+                'repayment' => $validated['repayment'] ?? 0,
             ];
 
             if ($property->getAttribute('meter') != $validated['meter']) {
