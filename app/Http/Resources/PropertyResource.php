@@ -25,8 +25,8 @@ class PropertyResource
             'meter' => $property->getAttribute('meter'),
             'meter_provider' => $property->getAttribute('meter_provider'),
             'address' => $property->getAttribute('address'),
-            'debt' => $property->getAttribute('debt'),
-            'repayment' => $property->getAttribute('repayment'),
+            'debt' => $property->getAttribute('debt') > 0 ? $property->getAttribute('debt') : null,
+            'repayment' => $property->getAttribute('repayment') > 0 ? $property->getAttribute('repayment') : null,
             'balances' => array_values($property->getAttribute('balances')),
             'owner' => $property->getAttribute('owner') ? UserResource::toArray($property->getAttribute('owner')) : null,
             'suburb' => $property->getAttribute('suburb') ? [
